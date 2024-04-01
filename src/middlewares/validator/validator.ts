@@ -27,6 +27,9 @@ export const signUpValidator = async (req: Request, res: Response, next: Functio
             });
         };
     } catch (error: any) {
-        res.status(500).send(error.message || "An error occured when creating your account.");
+        res.status(500).send({
+            status: false,
+            message: error.message || "An error occured when creating your account."
+        });
     }
 }
