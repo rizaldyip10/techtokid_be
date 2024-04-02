@@ -31,5 +31,29 @@ export const signUpValidator = async (req: Request, res: Response, next: Functio
             status: false,
             message: error.message || "An error occured when creating your account."
         });
-    }
-}
+    };
+};
+
+export const loginValidator = async (req: Request, res: Response, next: Function) => {
+    try {
+        await body("data")
+            .notEmpty().withMessage("Please enter your valid email or username")
+        
+            const validation = validationResult(req);
+        
+        if (validation.isEmpty()) {
+            next();
+        } else {
+            res.status(403).send({
+                status: false,
+                message: "Invalid validation, please check your input again.",
+                error: validation.array()
+            });
+        };
+    } catch (error: any) {
+        res.status(500).send({
+            status: false,
+            message: error.message || "An error occured when creating your account."
+        });
+    };
+};

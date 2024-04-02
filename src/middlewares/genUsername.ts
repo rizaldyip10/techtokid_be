@@ -1,8 +1,8 @@
 import db from "../db";
 
 
-export const genUsername = async (name: string) => {
-    let username = name.split(" ")[0];
+export const genUsername = async (email: string) => {
+    let username = email.split("@")[0];
 
     const isUsernameExist = await db.user.findFirst({
         where: {

@@ -14,8 +14,9 @@ model user {
   name     String?
   isVerified Boolean
   verifyToken String?
+  google_auth Boolean
   roleId   Int
-  password String
+  password String?
   profileImg String?
   userrole userrole @relation(fields: [roleId], references: [id], map: "User_roleId_fkey")
 
