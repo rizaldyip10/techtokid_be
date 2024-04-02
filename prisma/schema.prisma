@@ -13,8 +13,10 @@ model user {
   email    String   @unique(map: "User_email_key")
   name     String?
   isVerified Boolean
+  verifyToken String?
   roleId   Int
   password String
+  profileImg String?
   userrole userrole @relation(fields: [roleId], references: [id], map: "User_roleId_fkey")
 
   @@index([roleId], map: "User_roleId_fkey")

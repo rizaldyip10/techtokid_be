@@ -6,27 +6,20 @@ import fs from "fs";
 import Handlebars from "handlebars";
 import transporter from "../middlewares/transporter";
 import path from "path";
+import { genUsername } from "../middlewares/genUsername";
 
 const authControllers = {
     signUp: async (req: Request, res: Response) => {
         try {
             const { name, email, password, feURL } = req.body as unknown as { name: string, email: string, password: string, feURL: string };
             
-            let username = name.split(" ")[0];
+            let username = await genUsername(name);
         
-            const [isEmailExist, isUsernameExist] = await db.$transaction([
-                db.user.findFirst({
-                    where: { email }
-                }),
-                
-                db.user.findFirst({
-                    where: { username }
-                })
-            ]);
-            
-            if (isUsernameExist) {
-                username += Math.random().toString(36).substring(2, 6);
-            };
+            const isEmailExist = await db.user.findFirst({
+                where: {
+                    email
+                }
+            })
 
             if (isEmailExist) {
                 throw { message: "Email already used. Please choose another email" };
@@ -43,7 +36,7 @@ const authControllers = {
                     password: hashedPassword,
                     username,
                     isVerified: false,
-                    roleId: 1
+                    roleId: 1,
                 }
             });
             
@@ -87,7 +80,8 @@ const authControllers = {
 
             await db.user.update({
                 data: {
-                    isVerified: true
+                    isVerified: true,
+                    verifyToken: req.token
                 },
                 where: {
                     id: req.userId
@@ -103,6 +97,43 @@ const authControllers = {
             res.status(500).send({
                 status: false,
                 message: error.message || "An error occured when verifying your account"
+            })
+        }
+    },
+    login: async (req: Request, res: Response) => {
+        try {
+            const { data, password } = req.body;
+
+            const isUserExist = await db.user.findFirst({
+                where: {
+                    OR: [{ email: data }, { username: data }]
+                }
+            });
+
+            if (!isUserExist) {
+                throw { message: "Please enter your email or username correctly" }
+            };
+
+            if (!isUserExist.verifyToken) {
+                throw { message: "Your account is not verified, please verify your account"}
+            }
+
+            const isValid = bcrypt.compare(password, isUserExist?.password);
+
+            if (!isValid) throw { message: "Incorrect password" };
+
+            const token = generateToken(isUserExist.id, "6h")
+
+            res.status(200).send({
+                status: true,
+                result: isUserExist,
+                token
+            })
+
+        } catch (error: any) {
+            res.status(500).send({
+                status: false,
+                message: error.message || "An error occured when logging in to your account."
             })
         }
     }

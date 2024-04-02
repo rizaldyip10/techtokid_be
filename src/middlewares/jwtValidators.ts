@@ -18,8 +18,6 @@ export const jwtValidators = (req: Request, res: Response, next: Function) => {
 
         token = token.split(" ")[1];
         req.token = token;
-        console.log(token);
-        
 
         let verifiedUser = jwt.verify(token, process.env.JWT_SECRET_KEY as Secret) as { payload: string };
         req.userId = verifiedUser.payload;
